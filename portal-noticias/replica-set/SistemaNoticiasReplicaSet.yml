@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: sistema-noticias-replicaset
+spec:
+  replicas: 3
+  template:
+    metadata:
+      name: sistema-noticias
+      labels:
+        app: sistema-noticias
+    spec:
+      containers:
+        - name: sistema-noticias-container
+          image: aluracursos/sistema-noticias:1
+          ports:
+            - containerPort: 80
+          envFrom:
+            - configMapRef:
+                name: sistema-noticias-configmap
+  selector:
+    matchLabels:
+      app: sistema-noticias #Precisa ser igual ao definido em spec.template.metadata.labels caso contrário não funciona

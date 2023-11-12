@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: sistema-noticias-statefulset
+spec:
+  replicas: 1
+  template:
+    metadata:
+      name: sistema-noticias
+      labels:
+        app: sistema-noticias
+    spec:
+      containers:
+        - name: sistema-noticias-container
+          image: aluracursos/sistema-noticias:1
+          ports:
+            - containerPort: 80
+          envFrom:
+            - configMapRef:
+                name: sistema-noticias-configmap
+          livenessProbe: #testa se a aplicação está respondendo de acordo com o esperado. Retorno >= 200 && < 400 == Saudável
+            httpGet:
+              path: /
+              port: 80
+            periodSeconds: 10 #Testa a cada 10 segundos
+            failureThreshold: 3 #Se falhar 3 vezes reinicia o container
+            initialDelaySeconds: 20 #Atraso no início dos testes
+          readinessProbe: #testa se a aplicação está pronta de acordo com o esperado. Retorno >= 200 && < 400 == Saudável
+            httpGet:
+              path: /inserir_noticias.php
+              port: 80
+            periodSeconds: 10 #Testa a cada 10 segundos
+            failureThreshold: 3 #Se falhar 3 vezes ignora
+            initialDelaySeconds: 20 #Atraso no início dos testes                
+          volumeMounts:
+            - name: imagens
+              mountPath: /var/www/html/upload
+            - name: sessao
+              mountPath: /tmp
+      volumes:
+        - name: imagens
+          persistentVolumeClaim:
+            claimName: imagens-pvc
+        - name: sessao
+          persistentVolumeClaim:
+            claimName: sessao-pvc            
+  selector:
+    matchLabels:
+      app: sistema-noticias
+  serviceName: svc-sistema-noticias
